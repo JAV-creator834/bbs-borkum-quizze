@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Einheit 8 – Recht, Ordnung, Versand</title>
+<style>
+  :root {
+    --c-bg: #f5f1ea;          /* Sand */
+    --c-card: #ffffff;
+    --c-primary: #2e75b6;     /* Insel-Blau */
+    --c-primary-dark: #1f4e79;
+    --c-accent: #c7e0f4;
+    --c-success: #4caf50;
+    --c-success-bg: #e8f5e9;
+    --c-error: #d32f2f;
+    --c-error-bg: #ffebee;
+    --c-warn: #f57c00;
+    --c-text: #1f2937;
+    --c-muted: #6b7280;
+    --c-border: #d1d5db;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-dark) 100%);
+    color: white;
+    padding: 24px 16px;
+    text-align: center;
+  }
+  header h1 { margin: 0 0 8px; font-size: 22px; }
+  header p { margin: 0; opacity: 0.9; font-size: 14px; }
+  main { max-width: 720px; margin: 0 auto; padding: 16px; }
+  .progress {
+    background: white;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    font-size: 14px;
+  }
+  .progress-bar {
+    height: 6px;
+    background: var(--c-accent);
+    border-radius: 3px;
+    overflow: hidden;
+    flex: 1;
+    margin: 0 12px;
+  }
+  .progress-bar-fill {
+    height: 100%; width: 0%;
+    background: var(--c-primary);
+    transition: width 0.3s ease;
+  }
+  .punkte-score { font-weight: bold; color: var(--c-primary-dark); }
+  .frage {
+    background: var(--c-card);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    display: none;
+  }
+  .frage.active { display: block; }
+  .frage-meta { display: flex; gap: 8px; margin-bottom: 12px; }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .afb-I { background: #e3f2fd; color: #1565c0; }
+  .afb-II { background: #fff3e0; color: #e65100; }
+  .afb-III { background: #fce4ec; color: #c2185b; }
+  .punkte { background: #f5f5f5; color: var(--c-muted); }
+  .frage-text { font-size: 18px; margin: 0 0 16px; line-height: 1.4; }
+  .optionen { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .option {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 16px;
+    border: 2px solid var(--c-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: white;
+  }
+  .option:hover { border-color: var(--c-primary); background: #fafbfc; }
+  .option input { margin-top: 3px; flex-shrink: 0; transform: scale(1.2); }
+  .option.correct { background: var(--c-success-bg); border-color: var(--c-success); }
+  .option.incorrect { background: var(--c-error-bg); border-color: var(--c-error); }
+  .luecke-input {
+    width: 100%; padding: 12px 16px;
+    border: 2px solid var(--c-border); border-radius: 8px;
+    font-size: 16px; font-family: inherit;
+  }
+  .luecke-input:focus { outline: none; border-color: var(--c-primary); }
+  .luecke-input.correct { background: var(--c-success-bg); border-color: var(--c-success); }
+  .luecke-input.incorrect { background: var(--c-error-bg); border-color: var(--c-error); }
+  .hint { font-size: 13px; color: var(--c-muted); margin: 4px 0 8px; font-style: italic; }
+  .zuord-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .zuord-spalte { display: flex; flex-direction: column; gap: 6px; }
+  .zuord-item {
+    padding: 12px; border: 2px solid var(--c-border); border-radius: 8px;
+    background: white; min-height: 44px; touch-action: manipulation;
+  }
+  .zuord-rechts { background: var(--c-accent); cursor: pointer; }
+  .zuord-rechts.selected { background: var(--c-primary); color: white; }
+  .zuord-rechts.zugeordnet { opacity: 0.4; pointer-events: none; }
+  .zuord-links.belegt { background: var(--c-accent); }
+  .zuord-links .zugeordnet-mit {
+    display: block; font-size: 13px; color: var(--c-primary-dark);
+    margin-top: 4px; font-style: italic;
+  }
+  .reihe-wrap { display: flex; flex-direction: column; gap: 6px; }
+  .reihe-item {
+    padding: 12px; border: 2px solid var(--c-border); border-radius: 8px;
+    background: white; display: flex; justify-content: space-between; align-items: center;
+  }
+  .reihe-controls { display: flex; gap: 4px; }
+  .reihe-controls button {
+    background: var(--c-accent); border: none; border-radius: 4px;
+    width: 32px; height: 32px; font-size: 16px; cursor: pointer;
+  }
+  .btn {
+    padding: 12px 24px; border-radius: 8px; border: none;
+    font-size: 16px; font-weight: 600; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-primary { background: var(--c-primary); color: white; }
+  .btn-primary:hover { background: var(--c-primary-dark); }
+  .btn-primary:disabled { background: var(--c-muted); cursor: not-allowed; }
+  .btn-secondary { background: var(--c-accent); color: var(--c-primary-dark); }
+  .btn-secondary:hover { background: var(--c-primary); color: white; }
+  .frage-actions { margin-top: 8px; }
+  .frage-feedback {
+    margin-top: 16px; padding: 16px;
+    border-radius: 8px; border-left: 4px solid var(--c-primary);
+    background: #f9fafb;
+  }
+  .feedback-text { font-weight: 600; margin: 0 0 8px; }
+  .feedback-text.korrekt { color: var(--c-success); }
+  .feedback-text.falsch { color: var(--c-error); }
+  .erklaerung { margin: 8px 0; font-size: 15px; }
+  .quelle { font-size: 12px; color: var(--c-muted); margin: 8px 0 0; font-style: italic; }
+  .ergebnis {
+    background: var(--c-card); border-radius: 12px; padding: 32px 24px;
+    text-align: center; display: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .ergebnis.active { display: block; }
+  .ergebnis-score {
+    font-size: 48px; font-weight: bold;
+    color: var(--c-primary-dark); margin: 16px 0 8px;
+  }
+  .ergebnis-prozent { font-size: 20px; color: var(--c-muted); margin-bottom: 16px; }
+  .ergebnis-feedback {
+    padding: 16px; border-radius: 8px; margin: 16px 0;
+    font-size: 16px;
+  }
+  .stufe-sehr-gut { background: var(--c-success-bg); color: #2e7d32; }
+  .stufe-gut { background: #e8f5e9; color: #388e3c; }
+  .stufe-okay { background: #fff3e0; color: #e65100; }
+  .stufe-schwach { background: var(--c-error-bg); color: #c62828; }
+  .footer-info {
+    text-align: center; padding: 24px 16px; font-size: 13px;
+    color: var(--c-muted);
+  }
+  .lehrer-banner {
+    background: #fff3cd; color: #856404; padding: 12px 16px;
+    text-align: center; font-size: 14px; font-weight: 600;
+  }
+  .lehrer-loesung {
+    background: #e3f2fd; padding: 8px 12px; border-radius: 6px;
+    margin-top: 8px; font-size: 13px; color: #1565c0;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Quiz Einheit 8 – Recht, Ordnung, Versand</h1>
+  <p>LS 3 · LF 2 · BM 1. AJ · BBS Borkum</p>
+</header>
+
+<div class="lehrer-banner" id="lehrer-banner" hidden>
+  🔒 Lehrkraft-Modus aktiv – alle Lösungen werden angezeigt
+</div>
+
+<main>
+  <div class="progress">
+    <span><span id="aktuelle-frage">1</span> / 20</span>
+    <div class="progress-bar"><div class="progress-bar-fill" id="progress-fill"></div></div>
+    <span class="punkte-score"><span id="aktuelle-punkte">0</span> / 38 P</span>
+  </div>
+
+  <section id="quiz">
+
+    <article class="frage" data-typ="mc" data-richtig='1' data-punkte="1" id="frage-0">
+      <div class="frage-meta">
+        <span class="badge afb afb-I">AFB I</span>
+        <span class="badge punkte">1 P</span>
+      </div>
+      <h2 class="frage-text">Frage 1: Welcher DSGVO-Grundsatz besagt, dass Daten nur für den ursprünglichen Zweck verwendet werden dürfen?</h2>
+      <div class="optionen optionen-mc"><label class="option"><input type="radio" name="q0" value="0"> <span>Datenminimierung</span></label><label class="option"><input type="radio" name="q0" value="1"> <span>Zweckbindung</span></label><label class="option"><input type="radio" name="q0" value="2"> <span>Speicherbegrenzung</span></label><label class="option"><input type="radio" name="q0" value="3"> <span>Integrität &amp; Vertraulichkeit</span></label></div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="0">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> Grundsatz 2 „Zweckbindung&quot; (Art. 5 Abs. 1 lit. b DSGVO) verlangt, dass Daten nur für den konkreten Zweck verwendet werden, für den sie erhoben wurden.</p>
+        
+        <button class="btn btn-secondary" data-action="next" data-idx="0">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="wf" data-richtig='false' data-punkte="1" id="frage-1">
+      <div class="frage-meta">
+        <span class="badge afb afb-I">AFB I</span>
+        <span class="badge punkte">1 P</span>
+      </div>
+      <h2 class="frage-text">Frage 2: In der Touristeninfo darf eine Mitarbeiterin den Passwortzettel sichtbar an den Monitor kleben, solange das Backoffice abgeschlossen ist.</h2>
+      <div class="optionen optionen-wf">
+        <label class="option"><input type="radio" name="q1" value="true"> <span>Wahr</span></label>
+        <label class="option"><input type="radio" name="q1" value="false"> <span>Falsch</span></label>
+        </div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="1">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> Auch bei abgeschlossenem Raum verletzt das die Zugangskontrolle (TOM nach Art. 32 DSGVO). Reinigungspersonal, Praktikanten oder Besucher mit kurzem Zutritt könnten das Passwort sehen.</p>
+        <p class="quelle">Quelle: Büro 2.1, Europa-Lehrmittel 2024, S. 178–179 (adaptiert nach DSGVO Art. 32)</p>
+        <button class="btn btn-secondary" data-action="next" data-idx="1">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="zuordnung" data-richtig='[[&quot;Zutrittskontrolle&quot;, &quot;Unbefugte dürfen nicht in den Raum&quot;], [&quot;Zugangskontrolle&quot;, &quot;Unbefugte dürfen nicht ins Computer-System&quot;], [&quot;Zugriffskontrolle&quot;, &quot;Berechtigte sehen nur, was sie brauchen&quot;], [&quot;Weitergabekontrolle&quot;, &quot;Schutz beim Versand/Transport&quot;], [&quot;Verfügbarkeitskontrolle&quot;, &quot;Schutz gegen Datenverlust (Backup)&quot;]]' data-punkte="2" id="frage-2">
+      <div class="frage-meta">
+        <span class="badge afb afb-II">AFB II</span>
+        <span class="badge punkte">2 P</span>
+      </div>
+      <h2 class="frage-text">Frage 3: Ordne die TOM nach Art. 32 DSGVO ihrer Beschreibung zu.</h2>
+      <div class="optionen optionen-zuordnung">
+        <p class="hint">Ziehe die rechten Karten neben die passenden linken Begriffe (auf dem Smartphone: erst rechts antippen, dann links antippen, um zuzuordnen).</p>
+        <div class="zuord-wrap">
+          <div class="zuord-spalte"><div class="zuord-item zuord-links" data-key="0">Zutrittskontrolle</div><div class="zuord-item zuord-links" data-key="1">Zugangskontrolle</div><div class="zuord-item zuord-links" data-key="2">Zugriffskontrolle</div><div class="zuord-item zuord-links" data-key="3">Weitergabekontrolle</div><div class="zuord-item zuord-links" data-key="4">Verfügbarkeitskontrolle</div></div>
+          <div class="zuord-spalte zuord-pool"><div class="zuord-item zuord-rechts" data-key="0" draggable="true">Unbefugte dürfen nicht in den Raum</div><div class="zuord-item zuord-rechts" data-key="1" draggable="true">Unbefugte dürfen nicht ins Computer-System</div><div class="zuord-item zuord-rechts" data-key="2" draggable="true">Berechtigte sehen nur, was sie brauchen</div><div class="zuord-item zuord-rechts" data-key="3" draggable="true">Schutz beim Versand/Transport</div><div class="zuord-item zuord-rechts" data-key="4" draggable="true">Schutz gegen Datenverlust (Backup)</div></div>
+        </div>
+        </div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="2">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> Die TOM aus Art. 32 DSGVO unterscheiden sich nach Schutzziel: Zutritt schützt Räume, Zugang schützt Systeme, Zugriff schützt Daten innerhalb des Systems.</p>
+        <p class="quelle">Quelle: Büro 2.1, Europa-Lehrmittel 2024, S. 179 (adaptiert nach Art. 32 DSGVO)</p>
+        <button class="btn btn-secondary" data-action="next" data-idx="2">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="mr" data-richtig='[0, 1, 3, 4]' data-punkte="2" id="frage-3">
+      <div class="frage-meta">
+        <span class="badge afb afb-II">AFB II</span>
+        <span class="badge punkte">2 P</span>
+      </div>
+      <h2 class="frage-text">Frage 4: Welche Rechte hat ein Gast der Touristeninfo Borkum nach der DSGVO? (Mehrere richtig)</h2>
+      <div class="optionen optionen-mr"><p class="hint">Mehrere Antworten können richtig sein.</p><label class="option"><input type="checkbox" name="q3" value="0"> <span>Auskunftsrecht über gespeicherte Daten</span></label><label class="option"><input type="checkbox" name="q3" value="1"> <span>Recht auf Löschung (Vergessenwerden)</span></label><label class="option"><input type="checkbox" name="q3" value="2"> <span>Recht auf kostenfreie Hotelübernachtung</span></label><label class="option"><input type="checkbox" name="q3" value="3"> <span>Recht auf Berichtigung falscher Daten</span></label><label class="option"><input type="checkbox" name="q3" value="4"> <span>Beschwerderecht bei der Aufsichtsbehörde</span></label></div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="3">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> DSGVO-Betroffenenrechte sind Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung (Art. 18), Datenübertragbarkeit (Art. 20), Widerspruch (Art. 21) und Beschwerderecht (Art. 77). Hotelübernachtungen sind kein Datenschutzthema.</p>
+        
+        <button class="btn btn-secondary" data-action="next" data-idx="3">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="luecke" data-richtig='[&quot;72&quot;, &quot;72 Stunden&quot;, &quot;72h&quot;]' data-punkte="2" id="frage-4">
+      <div class="frage-meta">
+        <span class="badge afb afb-II">AFB II</span>
+        <span class="badge punkte">2 P</span>
+      </div>
+      <h2 class="frage-text">Frage 5: Wie viele Stunden hat ein Betrieb nach einer Datenpanne Zeit, diese an die Aufsichtsbehörde zu melden? (Zahl eingeben)</h2>
+      <div class="optionen optionen-luecke"><input type="text" name="q4" class="luecke-input" placeholder="Antwort eingeben..." autocomplete="off"></div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="4">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> Art. 33 DSGVO verlangt eine Meldung innerhalb von 72 Stunden nach Bekanntwerden der Datenpanne.</p>
+        
+        <button class="btn btn-secondary" data-action="next" data-idx="4">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="mc" data-richtig='2' data-punkte="1" id="frage-5">
+      <div class="frage-meta">
+        <span class="badge afb afb-I">AFB I</span>
+        <span class="badge punkte">1 P</span>
+      </div>
+      <h2 class="frage-text">Frage 6: Wie lange müssen Buchungsbelege nach §147 AO aufbewahrt werden?</h2>
+      <div class="optionen optionen-mc"><label class="option"><input type="radio" name="q5" value="0"> <span>3 Jahre</span></label><label class="option"><input type="radio" name="q5" value="1"> <span>6 Jahre</span></label><label class="option"><input type="radio" name="q5" value="2"> <span>10 Jahre</span></label><label class="option"><input type="radio" name="q5" value="3"> <span>30 Jahre</span></label></div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="5">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> Buchungsbelege (Rechnungen, Kassenbelege, …) sind nach §147 AO und §257 HGB 10 Jahre aufzubewahren.</p>
+        
+        <button class="btn btn-secondary" data-action="next" data-idx="5">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="wf" data-richtig='false' data-punkte="2" id="frage-6">
+      <div class="frage-meta">
+        <span class="badge afb afb-II">AFB II</span>
+        <span class="badge punkte">2 P</span>
+      </div>
+      <h2 class="frage-text">Frage 7: Die Aufbewahrungsfrist für eine Rechnung vom 15.03.2024 beginnt am 15.03.2024.</h2>
+      <div class="optionen optionen-wf">
+        <label class="option"><input type="radio" name="q6" value="true"> <span>Wahr</span></label>
+        <label class="option"><input type="radio" name="q6" value="false"> <span>Falsch</span></label>
+        </div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="6">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> Falsch. Nach §257 Abs. 5 HGB beginnt die Frist mit dem ENDE des Kalenderjahres – also am 31.12.2024. Vernichtung möglich ab 01.01.2035.</p>
+        
+        <button class="btn btn-secondary" data-action="next" data-idx="6">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="zuordnung" data-richtig='[[&quot;Tagewert&quot;, &quot;Wiedervorlage-Notiz&quot;], [&quot;Prüfwert&quot;, &quot;Empfangener Handelsbrief&quot;], [&quot;Dauerwert&quot;, &quot;Jahresabschluss&quot;]]' data-punkte="2" id="frage-7">
+      <div class="frage-meta">
+        <span class="badge afb afb-II">AFB II</span>
+        <span class="badge punkte">2 P</span>
+      </div>
+      <h2 class="frage-text">Frage 8: Ordne die Wertstufen den passenden Belegtypen zu.</h2>
+      <div class="optionen optionen-zuordnung">
+        <p class="hint">Ziehe die rechten Karten neben die passenden linken Begriffe (auf dem Smartphone: erst rechts antippen, dann links antippen, um zuzuordnen).</p>
+        <div class="zuord-wrap">
+          <div class="zuord-spalte"><div class="zuord-item zuord-links" data-key="0">Tagewert</div><div class="zuord-item zuord-links" data-key="1">Prüfwert</div><div class="zuord-item zuord-links" data-key="2">Dauerwert</div></div>
+          <div class="zuord-spalte zuord-pool"><div class="zuord-item zuord-rechts" data-key="0" draggable="true">Wiedervorlage-Notiz</div><div class="zuord-item zuord-rechts" data-key="1" draggable="true">Empfangener Handelsbrief</div><div class="zuord-item zuord-rechts" data-key="2" draggable="true">Jahresabschluss</div></div>
+        </div>
+        </div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="7">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> Tagewert = kurzfristig (keine gesetzliche Frist). Prüfwert = 6 Jahre (Handelsbriefe etc.). Dauerwert = 10 Jahre oder länger (Bilanzen, Buchungsbelege).</p>
+        <p class="quelle">Quelle: Büro 2.1, Europa-Lehrmittel 2024, S. 162</p>
+        <button class="btn btn-secondary" data-action="next" data-idx="7">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="mc" data-richtig='2' data-punkte="3" id="frage-8">
+      <div class="frage-meta">
+        <span class="badge afb afb-III">AFB III</span>
+        <span class="badge punkte">3 P</span>
+      </div>
+      <h2 class="frage-text">Frage 9: Eine Bewerbung wurde am 12.04.2025 abgelehnt. Es fand kein Vorstellungsgespräch statt. Wie ist mit der Bewerbung umzugehen?</h2>
+      <div class="optionen optionen-mc"><label class="option"><input type="radio" name="q8" value="0"> <span>10 Jahre aufbewahren (§147 AO)</span></label><label class="option"><input type="radio" name="q8" value="1"> <span>6 Jahre aufbewahren (Handelsbrief)</span></label><label class="option"><input type="radio" name="q8" value="2"> <span>Nach Ablauf der AGG-Klagefrist (ca. 2 Monate) löschen</span></label><label class="option"><input type="radio" name="q8" value="3"> <span>Dauerhaft im Archiv aufbewahren für ggf. spätere Bewerbungen</span></label></div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="8">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> Die AGG-Klagefrist (§15 Abs. 4 AGG) beträgt 2 Monate. Danach gibt es keinen Grund mehr, die Bewerbungsunterlagen zu behalten. Speicherbegrenzung nach DSGVO Art. 5 Abs. 1 lit. e greift.</p>
+        
+        <button class="btn btn-secondary" data-action="next" data-idx="8">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="mc" data-richtig='1' data-punkte="1" id="frage-9">
+      <div class="frage-meta">
+        <span class="badge afb afb-I">AFB I</span>
+        <span class="badge punkte">1 P</span>
+      </div>
+      <h2 class="frage-text">Frage 10: Welcher Paragraph regelt die Aufbewahrungspflicht für steuerrelevante Unterlagen?</h2>
+      <div class="optionen optionen-mc"><label class="option"><input type="radio" name="q9" value="0"> <span>§257 HGB</span></label><label class="option"><input type="radio" name="q9" value="1"> <span>§147 AO</span></label><label class="option"><input type="radio" name="q9" value="2"> <span>§9 BDSG</span></label><label class="option"><input type="radio" name="q9" value="3"> <span>Art. 5 DSGVO</span></label></div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="9">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> §147 AO (Abgabenordnung) regelt steuerrelevante Aufbewahrungspflichten. §257 HGB regelt parallel die handelsrechtlichen Pflichten.</p>
+        
+        <button class="btn btn-secondary" data-action="next" data-idx="9">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="mc" data-richtig='2' data-punkte="1" id="frage-10">
+      <div class="frage-meta">
+        <span class="badge afb afb-I">AFB I</span>
+        <span class="badge punkte">1 P</span>
+      </div>
+      <h2 class="frage-text">Frage 11: Welche Ablage-Systematik eignet sich am besten für eine Gästekartei mit Namen?</h2>
+      <div class="optionen optionen-mc"><label class="option"><input type="radio" name="q10" value="0"> <span>Numerisch</span></label><label class="option"><input type="radio" name="q10" value="1"> <span>Chronologisch</span></label><label class="option"><input type="radio" name="q10" value="2"> <span>Alphabetisch</span></label><label class="option"><input type="radio" name="q10" value="3"> <span>Nach Formaten</span></label></div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="10">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> Alphabetisch nach Nachnamen ist die klassische und schnellste Systematik für Personenkarteien.</p>
+        
+        <button class="btn btn-secondary" data-action="next" data-idx="10">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="reihenfolge" data-richtig='[&quot;Arbeitsplatzablage&quot;, &quot;Abteilungsablage&quot;, &quot;Zentralablage&quot;, &quot;Altablage&quot;, &quot;Archiv&quot;]' data-punkte="2" id="frage-11">
+      <div class="frage-meta">
+        <span class="badge afb afb-II">AFB II</span>
+        <span class="badge punkte">2 P</span>
+      </div>
+      <h2 class="frage-text">Frage 12: Bringe die Ablage-Standorte in der Reihenfolge vom unmittelbaren Arbeitsplatz bis zur langfristigen Aufbewahrung.</h2>
+      <div class="optionen optionen-reihenfolge">
+        <p class="hint">Bringe die Punkte in die richtige Reihenfolge (Smartphone: nutze die Pfeile auf jedem Element).</p>
+        <div class="reihe-wrap"><div class="reihe-item" data-key="0" draggable="true">Arbeitsplatzablage</div><div class="reihe-item" data-key="1" draggable="true">Abteilungsablage</div><div class="reihe-item" data-key="2" draggable="true">Zentralablage</div><div class="reihe-item" data-key="3" draggable="true">Altablage</div><div class="reihe-item" data-key="4" draggable="true">Archiv</div></div>
+        </div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="11">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> Diese Reihenfolge spiegelt die zeitliche und zugriffslogische Distanz wider: Arbeitsplatz = täglich genutzt, Archiv = nur in Ausnahmefällen, aber langfristig aufbewahrt.</p>
+        <p class="quelle">Quelle: Büro 2.1, Europa-Lehrmittel 2024, S. 167</p>
+        <button class="btn btn-secondary" data-action="next" data-idx="11">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="wf" data-richtig='true' data-punkte="2" id="frage-12">
+      <div class="frage-meta">
+        <span class="badge afb afb-II">AFB II</span>
+        <span class="badge punkte">2 P</span>
+      </div>
+      <h2 class="frage-text">Frage 13: Eine alphanumerische Systematik kombiniert Buchstaben und Zahlen (z. B. „M-2024-008&quot;).</h2>
+      <div class="optionen optionen-wf">
+        <label class="option"><input type="radio" name="q12" value="true"> <span>Wahr</span></label>
+        <label class="option"><input type="radio" name="q12" value="false"> <span>Falsch</span></label>
+        </div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="12">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> Richtig. Alphanumerisch verbindet die inhaltliche Aussagekraft (Buchstabe für Kategorie) mit der Eindeutigkeit (Nummer). Beispiel: M-2024-008 für die achte Mahnung des Jahres 2024.</p>
+        <p class="quelle">Quelle: Büro 2.1, Europa-Lehrmittel 2024, S. 162</p>
+        <button class="btn btn-secondary" data-action="next" data-idx="12">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="mc" data-richtig='2' data-punkte="3" id="frage-13">
+      <div class="frage-meta">
+        <span class="badge afb afb-III">AFB III</span>
+        <span class="badge punkte">3 P</span>
+      </div>
+      <h2 class="frage-text">Frage 14: In der Touristeninfo werden Saison-Werbeflyer abgelegt. Welche Kombination passt am besten?</h2>
+      <div class="optionen optionen-mc"><label class="option"><input type="radio" name="q13" value="0"> <span>Alphabetisch + Arbeitsplatzablage</span></label><label class="option"><input type="radio" name="q13" value="1"> <span>Numerisch + Archiv</span></label><label class="option"><input type="radio" name="q13" value="2"> <span>Thematisch + Formate, Standort Abteilungsablage</span></label><label class="option"><input type="radio" name="q13" value="3"> <span>Chronologisch + Zentralablage</span></label></div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="13">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> Werbeflyer sind gemischte Materialien (Flyer A5, Plakat A2) zu verschiedenen Themen (Sommer, Wellness, Strand). Thematisch nach Kampagne + Formate für die Größe ist sinnvoll. Standort: Abteilungsablage, da das ganze Team Zugriff braucht.</p>
+        
+        <button class="btn btn-secondary" data-action="next" data-idx="13">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="mr" data-richtig='[0, 1, 3, 4]' data-punkte="2" id="frage-14">
+      <div class="frage-meta">
+        <span class="badge afb afb-II">AFB II</span>
+        <span class="badge punkte">2 P</span>
+      </div>
+      <h2 class="frage-text">Frage 15: Welche der folgenden Ablage-Systematiken werden im Buch „Büro 2.1&quot; beschrieben? (Mehrere richtig)</h2>
+      <div class="optionen optionen-mr"><p class="hint">Mehrere Antworten können richtig sein.</p><label class="option"><input type="checkbox" name="q14" value="0"> <span>Sachgebiete</span></label><label class="option"><input type="checkbox" name="q14" value="1"> <span>Symbole</span></label><label class="option"><input type="checkbox" name="q14" value="2"> <span>Schriftgrößen</span></label><label class="option"><input type="checkbox" name="q14" value="3"> <span>Farben</span></label><label class="option"><input type="checkbox" name="q14" value="4"> <span>Formate</span></label></div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="14">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> Das Buch nennt 8 Systematiken: Sachgebiete, Alphabetisch, Chronologisch, Numerisch, Alphanumerisch, Farben, Symbole, Formate. „Schriftgrößen&quot; gehört nicht dazu.</p>
+        <p class="quelle">Quelle: Büro 2.1, Europa-Lehrmittel 2024, S. 162</p>
+        <button class="btn btn-secondary" data-action="next" data-idx="14">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="mc" data-richtig='3' data-punkte="1" id="frage-15">
+      <div class="frage-meta">
+        <span class="badge afb afb-I">AFB I</span>
+        <span class="badge punkte">1 P</span>
+      </div>
+      <h2 class="frage-text">Frage 16: Welches Briefformat der Deutschen Post hat eine maximale Dicke von 5,0 cm und ein Gewicht bis 1000 g?</h2>
+      <div class="optionen optionen-mc"><label class="option"><input type="radio" name="q15" value="0"> <span>Standardbrief</span></label><label class="option"><input type="radio" name="q15" value="1"> <span>Kompaktbrief</span></label><label class="option"><input type="radio" name="q15" value="2"> <span>Großbrief</span></label><label class="option"><input type="radio" name="q15" value="3"> <span>Maxibrief</span></label></div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="15">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> Der Maxibrief ist das größte Standardformat (bis 5 cm dick, bis 1 kg). Großbrief ist max. 2 cm / 500 g, Kompaktbrief max. 1 cm / 50 g, Standardbrief max. 0,5 cm / 20 g.</p>
+        <p class="quelle">Quelle: Büro 2.1, Europa-Lehrmittel 2024, S. 154–155</p>
+        <button class="btn btn-secondary" data-action="next" data-idx="15">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="zuordnung" data-richtig='[[&quot;Übergabe-Einschreiben&quot;, &quot;Kündigung Arbeitsverhältnis&quot;], [&quot;Einwurf-Einschreiben&quot;, &quot;Mahnung an Geschäftspartner&quot;], [&quot;Eigenhändig&quot;, &quot;Sensible Sendung nur an Person X&quot;], [&quot;mit Rückschein&quot;, &quot;Originalquittung als Beweis&quot;]]' data-punkte="2" id="frage-16">
+      <div class="frage-meta">
+        <span class="badge afb afb-II">AFB II</span>
+        <span class="badge punkte">2 P</span>
+      </div>
+      <h2 class="frage-text">Frage 17: Ordne die Einschreiben-Varianten den passenden Anlässen zu.</h2>
+      <div class="optionen optionen-zuordnung">
+        <p class="hint">Ziehe die rechten Karten neben die passenden linken Begriffe (auf dem Smartphone: erst rechts antippen, dann links antippen, um zuzuordnen).</p>
+        <div class="zuord-wrap">
+          <div class="zuord-spalte"><div class="zuord-item zuord-links" data-key="0">Übergabe-Einschreiben</div><div class="zuord-item zuord-links" data-key="1">Einwurf-Einschreiben</div><div class="zuord-item zuord-links" data-key="2">Eigenhändig</div><div class="zuord-item zuord-links" data-key="3">mit Rückschein</div></div>
+          <div class="zuord-spalte zuord-pool"><div class="zuord-item zuord-rechts" data-key="0" draggable="true">Kündigung Arbeitsverhältnis</div><div class="zuord-item zuord-rechts" data-key="1" draggable="true">Mahnung an Geschäftspartner</div><div class="zuord-item zuord-rechts" data-key="2" draggable="true">Sensible Sendung nur an Person X</div><div class="zuord-item zuord-rechts" data-key="3" draggable="true">Originalquittung als Beweis</div></div>
+        </div>
+        </div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="16">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> Die Wahl hängt vom benötigten Nachweis ab: Übergabe = Empfänger quittiert; Einwurf = nur Einwurfnachweis; Eigenhändig = nur an genannte Person; Rückschein = Quittung kommt zurück.</p>
+        <p class="quelle">Quelle: Büro 2.1, Europa-Lehrmittel 2024, S. 156</p>
+        <button class="btn btn-secondary" data-action="next" data-idx="16">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="wf" data-richtig='false' data-punkte="3" id="frage-17">
+      <div class="frage-meta">
+        <span class="badge afb afb-III">AFB III</span>
+        <span class="badge punkte">3 P</span>
+      </div>
+      <h2 class="frage-text">Frage 18: Eine E-Mail mit Lesebestätigung ist als Kündigung eines Arbeitsverhältnisses rechtlich ausreichend.</h2>
+      <div class="optionen optionen-wf">
+        <label class="option"><input type="radio" name="q17" value="true"> <span>Wahr</span></label>
+        <label class="option"><input type="radio" name="q17" value="false"> <span>Falsch</span></label>
+        </div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="17">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> Falsch. §623 BGB verlangt für eine Kündigung des Arbeitsverhältnisses die Schriftform mit eigenhändiger Unterschrift. E-Mail erfüllt nur Textform (§126b BGB) – die Lesebestätigung ändert daran nichts.</p>
+        
+        <button class="btn btn-secondary" data-action="next" data-idx="17">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="mc" data-richtig='1' data-punkte="3" id="frage-18">
+      <div class="frage-meta">
+        <span class="badge afb afb-III">AFB III</span>
+        <span class="badge punkte">3 P</span>
+      </div>
+      <h2 class="frage-text">Frage 19: Die Touristeninfo Borkum versendet eine vertrauliche Personalakte intern an den Bäder-Direktor. Welcher Versandweg ist am besten geeignet?</h2>
+      <div class="optionen optionen-mc"><label class="option"><input type="radio" name="q18" value="0"> <span>Standard-E-Mail mit PDF-Anhang</span></label><label class="option"><input type="radio" name="q18" value="1"> <span>Persönliche Übergabe oder interner Bote</span></label><label class="option"><input type="radio" name="q18" value="2"> <span>Standardbrief mit Briefmarke</span></label><label class="option"><input type="radio" name="q18" value="3"> <span>Lautes Diktat über Bürotelefon</span></label></div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="18">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> Höchste Vertraulichkeit + sofortiger nachweisbarer Zugang = persönliche Übergabe. Unverschlüsselte E-Mail mit Personalakte wäre ein DSGVO-Verstoß.</p>
+        
+        <button class="btn btn-secondary" data-action="next" data-idx="18">Weiter →</button>
+      </div>
+    </article>
+    
+
+    <article class="frage" data-typ="luecke" data-richtig='[&quot;De-Mail&quot;, &quot;DeMail&quot;, &quot;DE-Mail&quot;]' data-punkte="2" id="frage-19">
+      <div class="frage-meta">
+        <span class="badge afb afb-II">AFB II</span>
+        <span class="badge punkte">2 P</span>
+      </div>
+      <h2 class="frage-text">Frage 20: Wie heißt der verschlüsselte, identitätsgeprüfte E-Mail-Dienst mit gesetzlichem Zugangsnachweis (Lückenwort)?</h2>
+      <div class="optionen optionen-luecke"><input type="text" name="q19" class="luecke-input" placeholder="Antwort eingeben..." autocomplete="off"><p class="hint">Bekannt durch eIDAS-Verordnung.</p></div>
+      <div class="frage-actions">
+        <button class="btn btn-primary" data-action="check" data-idx="19">Antwort prüfen</button>
+      </div>
+      <div class="frage-feedback" hidden>
+        <p class="feedback-text"></p>
+        <p class="erklaerung"><strong>Erklärung:</strong> De-Mail ist der verschlüsselte, identitätsgeprüfte Dienst – beide Seiten benötigen ein Konto. Sie hat gesetzlich anerkannte Zugangsnachweise.</p>
+        
+        <button class="btn btn-secondary" data-action="next" data-idx="19">Weiter →</button>
+      </div>
+    </article>
+    
+  </section>
+
+  <section class="ergebnis" id="ergebnis">
+    <h2>Quiz abgeschlossen!</h2>
+    <div class="ergebnis-score"><span id="final-punkte">0</span> / 38</div>
+    <div class="ergebnis-prozent"><span id="final-prozent">0</span> %</div>
+    <div class="ergebnis-feedback" id="final-feedback"></div>
+    <button class="btn btn-primary" onclick="location.reload()">🔄 Quiz erneut starten</button>
+  </section>
+</main>
+
+<footer class="footer-info">
+  <p>Quiz mit 20 Fragen · Gesamt 38 Punkte · DSGVO-konform (keine Datenübertragung)</p>
+  <p style="margin-top:4px;">Lehrkraft-Modus: URL um <code>?modus=lehrer</code> erweitern</p>
+</footer>
+
+<script>
+(function() {
+  const fragen = document.querySelectorAll('.frage');
+  const gesamtFragen = fragen.length;
+  let aktiveIdx = 0;
+  let punkte = 0;
+  const istLehrerModus = new URLSearchParams(location.search).get('modus') === 'lehrer';
+
+  if (istLehrerModus) {
+    document.getElementById('lehrer-banner').hidden = false;
+    fragen.forEach(zeigeLehrerLoesung);
+  }
+
+  fragen[0].classList.add('active');
+  updateProgress();
+
+  document.addEventListener('click', function(ev) {
+    const target = ev.target;
+    if (target.dataset.action === 'check') {
+      checkFrage(parseInt(target.dataset.idx));
+    } else if (target.dataset.action === 'next') {
+      naechsteFrage();
+    }
+  });
+
+  // Zuordnung: Tap-to-select-and-place
+  document.addEventListener('click', function(ev) {
+    const item = ev.target.closest('.zuord-rechts');
+    if (item && !item.classList.contains('zugeordnet')) {
+      document.querySelectorAll('.zuord-rechts.selected').forEach(el => el.classList.remove('selected'));
+      item.classList.add('selected');
+    }
+    const linksItem = ev.target.closest('.zuord-links');
+    if (linksItem) {
+      const ausgewaehlt = document.querySelector('.zuord-rechts.selected');
+      if (ausgewaehlt) {
+        const altZuordnung = linksItem.querySelector('.zugeordnet-mit');
+        if (altZuordnung) {
+          // alte Zuordnung freigeben
+          const altKey = altZuordnung.dataset.key;
+          document.querySelectorAll(`.zuord-rechts[data-key="${altKey}"]`).forEach(el => el.classList.remove('zugeordnet'));
+          altZuordnung.remove();
+        }
+        const tag = document.createElement('span');
+        tag.className = 'zugeordnet-mit';
+        tag.dataset.key = ausgewaehlt.dataset.key;
+        tag.textContent = '↪ ' + ausgewaehlt.textContent;
+        linksItem.appendChild(tag);
+        linksItem.classList.add('belegt');
+        ausgewaehlt.classList.remove('selected');
+        ausgewaehlt.classList.add('zugeordnet');
+      }
+    }
+  });
+
+  // Reihenfolge: zufällig mischen + Pfeil-Steuerung
+  document.querySelectorAll('.reihe-wrap').forEach(wrap => {
+    const items = Array.from(wrap.children);
+    // Mischen
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      wrap.insertBefore(items[j], items[i].nextSibling);
+    }
+    // Pfeile hinzufügen
+    Array.from(wrap.children).forEach(item => {
+      const ctrl = document.createElement('div');
+      ctrl.className = 'reihe-controls';
+      ctrl.innerHTML = '<button data-arrow="up">↑</button><button data-arrow="down">↓</button>';
+      item.appendChild(ctrl);
+    });
+    wrap.addEventListener('click', function(e) {
+      if (e.target.dataset.arrow === 'up') {
+        const it = e.target.closest('.reihe-item');
+        if (it.previousElementSibling) wrap.insertBefore(it, it.previousElementSibling);
+      }
+      if (e.target.dataset.arrow === 'down') {
+        const it = e.target.closest('.reihe-item');
+        if (it.nextElementSibling) wrap.insertBefore(it.nextElementSibling, it);
+      }
+    });
+  });
+
+  // Zuordnung: Spalte rechts mischen
+  document.querySelectorAll('.zuord-pool').forEach(pool => {
+    const items = Array.from(pool.children);
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      pool.insertBefore(items[j], items[i].nextSibling);
+    }
+  });
+
+  function checkFrage(idx) {
+    const frage = fragen[idx];
+    const typ = frage.dataset.typ;
+    const richtigJson = frage.dataset.richtig;
+    const richtig = JSON.parse(richtigJson.replace(/&quot;/g, '"').replace(/&#x27;/g, "'"));
+    const punkteFrage = parseInt(frage.dataset.punkte);
+
+    let korrekt = false;
+
+    if (typ === 'mc') {
+      const sel = frage.querySelector('input[type=radio]:checked');
+      if (!sel) { alert('Bitte wähle eine Antwort.'); return; }
+      korrekt = parseInt(sel.value) === richtig;
+      frage.querySelectorAll('.option').forEach((opt, i) => {
+        if (i === richtig) opt.classList.add('correct');
+        else if (i === parseInt(sel.value)) opt.classList.add('incorrect');
+      });
+    }
+    else if (typ === 'mr') {
+      const sel = Array.from(frage.querySelectorAll('input[type=checkbox]:checked')).map(i => parseInt(i.value)).sort();
+      const ok = [...richtig].sort();
+      korrekt = JSON.stringify(sel) === JSON.stringify(ok);
+      frage.querySelectorAll('.option').forEach((opt, i) => {
+        if (richtig.includes(i)) opt.classList.add('correct');
+        else if (sel.includes(i)) opt.classList.add('incorrect');
+      });
+    }
+    else if (typ === 'wf') {
+      const sel = frage.querySelector('input[type=radio]:checked');
+      if (!sel) { alert('Bitte wähle eine Antwort.'); return; }
+      korrekt = (sel.value === 'true') === richtig;
+      frage.querySelectorAll('.option').forEach((opt) => {
+        const v = opt.querySelector('input').value;
+        if ((v === 'true') === richtig) opt.classList.add('correct');
+        else if (sel.value === v) opt.classList.add('incorrect');
+      });
+    }
+    else if (typ === 'luecke') {
+      const input = frage.querySelector('.luecke-input');
+      const val = input.value.trim().toLowerCase();
+      korrekt = richtig.some(r => val === r.toLowerCase());
+      input.classList.add(korrekt ? 'correct' : 'incorrect');
+      input.disabled = true;
+    }
+    else if (typ === 'zuordnung') {
+      const links = frage.querySelectorAll('.zuord-links');
+      const fehler = [];
+      links.forEach((l, i) => {
+        const tag = l.querySelector('.zugeordnet-mit');
+        if (!tag || parseInt(tag.dataset.key) !== i) fehler.push(i);
+      });
+      korrekt = fehler.length === 0;
+      // Visual feedback
+      links.forEach((l, i) => {
+        const tag = l.querySelector('.zugeordnet-mit');
+        if (tag) {
+          tag.style.color = (parseInt(tag.dataset.key) === i) ? 'var(--c-success)' : 'var(--c-error)';
+        }
+      });
+    }
+    else if (typ === 'reihenfolge') {
+      const items = frage.querySelectorAll('.reihe-item');
+      let ok = true;
+      items.forEach((it, i) => {
+        if (parseInt(it.dataset.key) !== i) ok = false;
+      });
+      korrekt = ok;
+      items.forEach((it, i) => {
+        it.classList.add(parseInt(it.dataset.key) === i ? 'correct' : 'incorrect');
+      });
+    }
+
+    if (korrekt) punkte += punkteFrage;
+    document.getElementById('aktuelle-punkte').textContent = punkte;
+
+    const feedback = frage.querySelector('.frage-feedback');
+    const feedbackText = feedback.querySelector('.feedback-text');
+    if (korrekt) {
+      feedbackText.textContent = `✓ Richtig! (+${punkteFrage} Punkte)`;
+      feedbackText.className = 'feedback-text korrekt';
+    } else {
+      feedbackText.textContent = '✗ Leider falsch.';
+      feedbackText.className = 'feedback-text falsch';
+    }
+    feedback.hidden = false;
+    frage.querySelector('[data-action="check"]').style.display = 'none';
+    // Eingabe deaktivieren
+    frage.querySelectorAll('input').forEach(i => i.disabled = true);
+  }
+
+  function naechsteFrage() {
+    fragen[aktiveIdx].classList.remove('active');
+    aktiveIdx++;
+    if (aktiveIdx >= gesamtFragen) {
+      zeigeErgebnis();
+    } else {
+      fragen[aktiveIdx].classList.add('active');
+      updateProgress();
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+  }
+
+  function updateProgress() {
+    document.getElementById('aktuelle-frage').textContent = aktiveIdx + 1;
+    const pct = ((aktiveIdx) / gesamtFragen) * 100;
+    document.getElementById('progress-fill').style.width = pct + '%';
+  }
+
+  function zeigeErgebnis() {
+    document.getElementById('quiz').style.display = 'none';
+    document.getElementById('progress-fill').style.width = '100%';
+    const erg = document.getElementById('ergebnis');
+    const gesamt = 38;
+    const prozent = Math.round((punkte / gesamt) * 100);
+    document.getElementById('final-punkte').textContent = punkte;
+    document.getElementById('final-prozent').textContent = prozent;
+    const fb = document.getElementById('final-feedback');
+    if (prozent >= 90) {
+      fb.className = 'ergebnis-feedback stufe-sehr-gut';
+      fb.textContent = '🌟 Sehr stark! Du hast die Einheit voll im Griff.';
+    } else if (prozent >= 70) {
+      fb.className = 'ergebnis-feedback stufe-gut';
+      fb.textContent = '👍 Solide Leistung! Schau dir die schwierigen Themen noch einmal an.';
+    } else if (prozent >= 50) {
+      fb.className = 'ergebnis-feedback stufe-okay';
+      fb.textContent = '🙂 Da geht noch was. Wiederhole die Inhalte und versuche es erneut.';
+    } else {
+      fb.className = 'ergebnis-feedback stufe-schwach';
+      fb.textContent = '📚 Schau dir die Inhalte nochmal in Ruhe an – und sprich deine Lehrkraft an.';
+    }
+    erg.classList.add('active');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+
+  function zeigeLehrerLoesung(frage) {
+    const richtigJson = frage.dataset.richtig;
+    const richtig = JSON.parse(richtigJson.replace(/&quot;/g, '"').replace(/&#x27;/g, "'"));
+    const typ = frage.dataset.typ;
+    const text = frage.querySelector('.frage-text');
+    const div = document.createElement('div');
+    div.className = 'lehrer-loesung';
+    let loesung = '';
+    if (typ === 'mc') {
+      const opt = frage.querySelectorAll('.option')[richtig];
+      loesung = '✓ Richtig: ' + (opt ? opt.textContent.trim() : richtig);
+    } else if (typ === 'mr') {
+      const opts = frage.querySelectorAll('.option');
+      const texte = richtig.map(i => opts[i] ? opts[i].textContent.trim() : i).join(' | ');
+      loesung = '✓ Richtig: ' + texte;
+    } else if (typ === 'wf') {
+      loesung = '✓ Richtig: ' + (richtig ? 'Wahr' : 'Falsch');
+    } else if (typ === 'luecke') {
+      loesung = '✓ Richtig: ' + richtig.join(' / ');
+    } else if (typ === 'zuordnung') {
+      loesung = '✓ Paare: ' + richtig.map(p => p[0] + ' ↔ ' + p[1]).join(' | ');
+    } else if (typ === 'reihenfolge') {
+      loesung = '✓ Reihenfolge: ' + richtig.join(' → ');
+    }
+    div.textContent = loesung;
+    text.after(div);
+  }
+})();
+</script>
+</body>
+</html>
