@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BBS Borkum · Quizze</title>
+<meta name="description" content="Interaktive Lern-Quizze BBS Borkum">
+<style>
+  :root {
+    --c-bg: #f5f1ea;
+    --c-card: #ffffff;
+    --c-primary: #2e75b6;
+    --c-primary-dark: #1f4e79;
+    --c-accent: #c7e0f4;
+    --c-tag-bg: #eaf2f8;
+    --c-tag-text: #1f4e79;
+    --c-text: #1f2937;
+    --c-muted: #6b7280;
+    --c-border: #d1d5db;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    font-size: 16px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+  header {
+    background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-dark) 100%);
+    color: white;
+    padding: 40px 16px;
+    text-align: center;
+  }
+  header h1 { margin: 0 0 8px; font-size: 28px; }
+  header p { margin: 0; opacity: 0.95; font-size: 16px; }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+  .datenschutz-banner {
+    background: #e8f5e9; color: #2e7d32;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    border-left: 4px solid #4caf50;
+  }
+  .quiz-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+  .quiz-card {
+    display: block;
+    background: var(--c-card);
+    border-radius: 12px;
+    padding: 20px;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: 2px solid transparent;
+  }
+  .quiz-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(46, 117, 182, 0.15);
+    border-color: var(--c-primary);
+  }
+  .quiz-card-header h3 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    color: var(--c-primary-dark);
+    line-height: 1.3;
+  }
+  .quiz-card-header .kontext {
+    font-size: 13px;
+    color: var(--c-muted);
+    font-weight: 600;
+  }
+  .quiz-card-stats {
+    display: flex;
+    gap: 16px;
+    margin: 12px 0;
+    font-size: 14px;
+    color: var(--c-muted);
+  }
+  .quiz-card-stats .stat { display: flex; align-items: center; gap: 4px; }
+  .quiz-card-themen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 12px 0;
+  }
+  .tag {
+    background: var(--c-tag-bg);
+    color: var(--c-tag-text);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .quiz-card-cta {
+    color: var(--c-primary);
+    font-weight: 600;
+    margin-top: 12px;
+    font-size: 15px;
+  }
+  .leer-hinweis {
+    background: var(--c-card);
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    color: var(--c-muted);
+  }
+  .lehrer-hinweis {
+    background: var(--c-card);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-top: 24px;
+    font-size: 14px;
+    color: var(--c-muted);
+    border-left: 4px solid var(--c-primary);
+  }
+  .lehrer-hinweis strong { color: var(--c-primary-dark); }
+  .lehrer-hinweis code {
+    background: var(--c-accent);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+  footer {
+    text-align: center;
+    padding: 32px 16px;
+    font-size: 13px;
+    color: var(--c-muted);
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>BBS Borkum · Quizze</h1>
+  <p>Interaktive Lern-Quizze · Lehrkraft JAV</p>
+</header>
+
+<main>
+  <div class="datenschutz-banner">
+    🔒 Datenschutz: Alle Quizze laufen lokal im Browser. Es werden keine Daten gespeichert oder an Server übertragen.
+  </div>
+
+  <div class="quiz-grid">
+    
+        <a class="quiz-card" href="Quiz_Einheit_8_Recht_Ordnung_Versand.html">
+          <div class="quiz-card-header">
+            <h3>Einheit 8 – Recht, Ordnung, Versand</h3>
+            <span class="kontext">LF 2 · LS 3 · BM 1. AJ · BBS Borkum</span>
+          </div>
+          <div class="quiz-card-stats">
+            <span class="stat">📝 20 Fragen</span>
+            <span class="stat">⏱ ca. 15 Min</span>
+          </div>
+          <div class="quiz-card-themen">
+            <span class="tag">DSGVO</span><span class="tag">Aufbewahrungsfristen</span><span class="tag">Ablage-Systematiken</span><span class="tag">Versandwege</span>
+          </div>
+          <div class="quiz-card-cta">Quiz starten →</div>
+        </a>
+        
+  </div>
+
+  <div class="lehrer-hinweis">
+    <strong>💡 Tipp für die Lehrkraft:</strong> Hänge <code>?modus=lehrer</code> an die Quiz-URL an, um alle Lösungen direkt anzuzeigen – ideal für die Plenum-Auswertung.
+  </div>
+</main>
+
+<footer>
+  <p>BBS Borkum · Lehrkraft JAV · BBS Borkum</p>
+  <p style="margin-top:4px; font-size: 12px;">Quiz-System generiert mit dem quiz-generator-Agenten</p>
+</footer>
+
+</body>
+</html>
